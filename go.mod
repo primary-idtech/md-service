@@ -3,6 +3,7 @@ module md-service
 go 1.20
 
 require (
+	github.com/gorilla/websocket v1.5.0
 	github.com/quickfixgo/enum v0.1.0
 	github.com/quickfixgo/fixt11 v0.1.0
 	github.com/quickfixgo/quickfix v0.7.0

@@ -1,9 +1,15 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"md-service/pkg/fix"
+	"md-service/pkg/websocket"
+	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/quickfixgo/quickfix"
 )
@@ -18,29 +24,45 @@ func main() {
 
 	settingsReader, err := os.Open("./quickfix.cfg")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer settingsReader.Close()
 
 	appSettings, err := quickfix.ParseSettings(settingsReader)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	logFactory := fix.NewLogFactory()
 
 	initiator, err := quickfix.NewInitiator(app, storeFactory, appSettings, logFactory)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	err = initiator.Start()
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	// Start HTTP server
-	// TODO
+	// Start websocket server
+	webSocketHandler := websocket.NewWebSocketHandler()
+	http.HandleFunc("/ws", webSocketHandler)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	server := &http.Server{
+		Addr: fmt.Sprintf(":%s", port),
+	}
+
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
 
 	// Wait for interrupt
 	stop := make(chan os.Signal, 1)
@@ -48,4 +70,13 @@ func main() {
 	<-stop
 
 	initiator.Stop()
+
+	// Create a context with a timeout of 5 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = server.Shutdown(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
