@@ -39,3 +39,18 @@ func TestConvertFIXMarketData(t *testing.T) {
 	// Expected last is 260.00
 	assert.Equal(t, decimal.NewNullDecimal(decimal.RequireFromString("260.00")), md.Last)
 }
+
+func TestConvertFIXMarketData_RequiredFieldMissing(t *testing.T) {
+	txt := "8=FIXT.1.1|9=134|35=W|34=12|49=ROFX|52=20230626-02:08:42.283|56=sfernandez7468|55=DLR/JUN23|207=ROFX|262=DLR/JUN23|264=5|268=2|269=0|290=0|269=1|290=0|10=161|"
+	txt = strings.ReplaceAll(txt, "|", "\x01")
+
+	msg := quickfix.NewMessage()
+	quickfix.ParseMessage(msg, bytes.NewBuffer([]byte(txt)))
+
+	fixMd := marketdatasnapshotfullrefresh.FromMessage(msg)
+	converter := &mdConverter{}
+
+	md, err := converter.convert(&fixMd)
+	assert.NoError(t, err)
+	assert.Equal(t, "DLR/JUN23", md.Symbol)
+}

@@ -42,6 +42,26 @@ func NewWebSocketHandler(ps pubsub.Pubsub) http.HandlerFunc {
 			Ch: make(chan *model.MarketData),
 		}
 
+		ctx := r.Context()
+
+		// Start a goroutine to read messages from the channel and send them to WebSocket
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					// Unsubscribe from all symbols
+					ps.Disconnect(client)
+					return
+				case md := <-client.Ch:
+					err = conn.WriteJSON(md)
+					if err != nil {
+						log.Println(err)
+						return
+					}
+				}
+			}
+		}()
+
 		// Handle WebSocket messages
 		for {
 			// Read message from WebSocket
@@ -82,17 +102,6 @@ func NewWebSocketHandler(ps pubsub.Pubsub) http.HandlerFunc {
 				for _, symbol := range clientMessage.Symbols {
 					ps.Unsubscribe(client, symbol)
 				}
-			}
-
-			// If there are messages in the channel, send them to WebSocket
-			select {
-			case md := <-client.Ch:
-				err = conn.WriteJSON(md)
-				if err != nil {
-					log.Println(err)
-					return
-				}
-			default:
 			}
 		}
 	}

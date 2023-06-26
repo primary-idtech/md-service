@@ -75,10 +75,7 @@ func (mdc *mdConverter) convert(fixMd *marketdatasnapshotfullrefresh.MarketDataS
 			var err error
 
 			// Trade price
-			price, err := entry.GetMDEntryPx()
-			if err != nil {
-				return md, err
-			}
+			price, _ := entry.GetMDEntryPx()
 
 			md.Last = decimal.NullDecimal{
 				Decimal: price,
@@ -95,11 +92,7 @@ func (mdc *mdConverter) convert(fixMd *marketdatasnapshotfullrefresh.MarketDataS
 
 		if entryType == enum.MDEntryType_BID {
 			// Bid price
-			price, err := entry.GetMDEntryPx()
-			if err != nil {
-				return md, err
-			}
-
+			price, _ := entry.GetMDEntryPx()
 			md.Bid = decimal.NullDecimal{
 				Decimal: price,
 				Valid:   true,
@@ -108,11 +101,7 @@ func (mdc *mdConverter) convert(fixMd *marketdatasnapshotfullrefresh.MarketDataS
 
 		if entryType == enum.MDEntryType_OFFER {
 			// Ask price
-			price, err := entry.GetMDEntryPx()
-			if err != nil {
-				return md, err
-			}
-
+			price, _ := entry.GetMDEntryPx()
 			md.Ask = decimal.NullDecimal{
 				Decimal: price,
 				Valid:   true,

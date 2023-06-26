@@ -37,9 +37,14 @@ func (ps *pubsub) Subscribe(client *model.Client, symbol string) *model.MarketDa
 	ps.clients.Store(client.ID, client)
 
 	// Add client to subscriptions
-	clients, _ := ps.subscriptions.LoadOrStore(symbol, []*model.Client{})
+	clients, loaded := ps.subscriptions.LoadOrStore(symbol, []*model.Client{})
 	clients = append(clients.([]*model.Client), client)
 	ps.subscriptions.Store(symbol, clients)
+
+	// Subscribe symbol to FIX if not loaded
+	if !loaded {
+		ps.app.SendMarketDataRequest(symbol)
+	}
 
 	// Return market data
 	return ps.lvc.GetMarketData(symbol)
