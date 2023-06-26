@@ -12,24 +12,23 @@ type LVC interface {
 }
 
 type lvc struct {
-	marketData map[string]*model.MarketData
-	mutex      sync.RWMutex
+	marketData sync.Map
 }
 
 func NewLVC() LVC {
 	return &lvc{
-		marketData: make(map[string]*model.MarketData),
+		marketData: sync.Map{},
 	}
 }
 
 func (l *lvc) UpdateMarketData(md *model.MarketData) {
-	l.mutex.Lock()
-	defer l.mutex.Unlock()
-	l.marketData[md.Symbol] = md
+	l.marketData.Store(md.Symbol, md)
 }
 
 func (l *lvc) GetMarketData(symbol string) *model.MarketData {
-	l.mutex.RLock()
-	defer l.mutex.RUnlock()
-	return l.marketData[symbol]
+	md, ok := l.marketData.Load(symbol)
+	if !ok {
+		return nil
+	}
+	return md.(*model.MarketData)
 }

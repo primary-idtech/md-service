@@ -12,10 +12,10 @@ func TestUpdateMarketData(t *testing.T) {
 		Symbol: "AAPL",
 	}
 
-	lvc.UpdateMarketData(md)
+	lvc.marketData.Store(md.Symbol, md)
 
-	if lvc.marketData["AAPL"] != md {
-		t.Errorf("Expected %v, got %v", md, lvc.marketData["AAPL"])
+	if val, ok := lvc.marketData.Load(md.Symbol); !ok || val != md {
+		t.Errorf("Expected %v, got %v", md, val)
 	}
 }
 
@@ -26,10 +26,10 @@ func TestGetMarketData(t *testing.T) {
 		Symbol: "AAPL",
 	}
 
-	lvc.marketData["AAPL"] = md
+	lvc.marketData.Store(md.Symbol, md)
 
-	if lvc.GetMarketData("AAPL") != md {
-		t.Errorf("Expected %v, got %v", md, lvc.GetMarketData("AAPL"))
+	if val, ok := lvc.marketData.Load(md.Symbol); !ok || val != md {
+		t.Errorf("Expected %v, got %v", md, val)
 	}
 }
 
