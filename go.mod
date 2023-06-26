@@ -3,8 +3,10 @@ module md-service
 go 1.20
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/quickfixgo/enum v0.1.0
+	github.com/quickfixgo/fix50sp2 v0.1.0
 	github.com/quickfixgo/fixt11 v0.1.0
 	github.com/quickfixgo/quickfix v0.7.0
 	github.com/shopspring/decimal v1.3.1

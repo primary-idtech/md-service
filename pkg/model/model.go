@@ -13,3 +13,8 @@ type MarketData struct {
 	Ask      decimal.NullDecimal
 	Last     decimal.NullDecimal
 }
+
+type Client struct {
+	ID string
+	Ch chan *MarketData
+}

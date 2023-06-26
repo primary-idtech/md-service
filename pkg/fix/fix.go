@@ -1,7 +1,9 @@
 package fix
 
 import (
-	"github.com/quickfixgo/enum"
+	"md-service/quickfix/enum"
+	"md-service/quickfix/fix50/marketdatasnapshotfullrefresh"
+
 	"github.com/quickfixgo/fixt11/logon"
 	"github.com/quickfixgo/quickfix"
 )
@@ -15,12 +17,14 @@ type Application interface {
 type application struct {
 	username string
 	password string
+	fixMdCh  chan<- *marketdatasnapshotfullrefresh.MarketDataSnapshotFullRefresh
 }
 
-func NewApplication(username, password string) Application {
+func NewApplication(username, password string, fixMdCh chan<- *marketdatasnapshotfullrefresh.MarketDataSnapshotFullRefresh) Application {
 	return &application{
 		username: username,
 		password: password,
+		fixMdCh:  fixMdCh,
 	}
 }
 
@@ -51,6 +55,11 @@ func (a *application) FromAdmin(msg *quickfix.Message, sessionID quickfix.Sessio
 }
 
 func (a *application) FromApp(msg *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError {
+	if msg.IsMsgTypeOf(string(enum.MsgType_MARKET_DATA_SNAPSHOT_FULL_REFRESH)) {
+		md := marketdatasnapshotfullrefresh.FromMessage(msg)
+		a.fixMdCh <- &md
+	}
+
 	return nil
 }
 

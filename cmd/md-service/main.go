@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"log"
 	"md-service/pkg/fix"
+	"md-service/pkg/lvc"
+	"md-service/pkg/model"
+	"md-service/pkg/pubsub"
 	"md-service/pkg/websocket"
+	"md-service/quickfix/fix50/marketdatasnapshotfullrefresh"
 	"net/http"
 	"os"
 	"os/signal"
@@ -18,7 +22,9 @@ func main() {
 	username := os.Getenv("FIX_USERNAME")
 	password := os.Getenv("FIX_PASSWORD")
 
-	app := fix.NewApplication(username, password)
+	mdChannel := make(chan *model.MarketData)
+	fixMdChannel := make(chan *marketdatasnapshotfullrefresh.MarketDataSnapshotFullRefresh)
+	app := fix.NewApplication(username, password, fixMdChannel)
 
 	storeFactory := quickfix.NewMemoryStoreFactory()
 
@@ -40,13 +46,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	lvc := lvc.NewLVC()
+	pubsub := pubsub.NewPubsub(lvc, app, mdChannel)
+	pubsub.Start()
+
+	mdConverter := fix.NewMdConverter(fixMdChannel, mdChannel)
+	mdConverter.Start()
+
 	err = initiator.Start()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Start websocket server
-	webSocketHandler := websocket.NewWebSocketHandler()
+	webSocketHandler := websocket.NewWebSocketHandler(pubsub)
 	http.HandleFunc("/ws", webSocketHandler)
 
 	port := os.Getenv("PORT")
