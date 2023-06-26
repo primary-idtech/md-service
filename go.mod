@@ -22,6 +22,7 @@ require (
 	github.com/quickfixgo/enum v0.1.0 // indirect
 	github.com/quickfixgo/field v0.1.0 // indirect
 	github.com/quickfixgo/tag v0.1.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
